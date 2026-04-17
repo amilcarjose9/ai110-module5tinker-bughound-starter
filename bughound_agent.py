@@ -69,7 +69,6 @@ class BugHoundAgent:
             f"CODE:\n{code_snippet}"
         )
 
-        # UPDATED: Added exception handling for API errors/rate limits
         try:
             raw = self.client.complete(system_prompt=system_prompt, user_prompt=user_prompt)
         except Exception as e:
@@ -81,6 +80,13 @@ class BugHoundAgent:
         if issues is None:
             self._log("ANALYZE", "LLM output was not parseable JSON. Falling back to heuristics.")
             return self._heuristic_analyze(code_snippet)
+        
+        # If the LLM claims the code is flawless, double-check with deterministic rules.
+        if len(issues) == 0:
+            heuristic_issues = self._heuristic_analyze(code_snippet)
+            if heuristic_issues:
+                self._log("ANALYZE", "LLM found 0 issues, but heuristics caught something. Overriding LLM.")
+                return heuristic_issues
 
         return issues
 

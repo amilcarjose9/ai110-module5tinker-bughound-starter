@@ -33,10 +33,10 @@ class GeminiClient:
             )
 
         # Import here so heuristic mode doesn't require the dependency at import time.
-        import google.generativeai as genai
+        from google import genai
 
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model_name)
+        self.client = genai.Client(api_key=api_key)
+        self.model_name = model_name
         self.temperature = float(temperature)
 
     def complete(self, system_prompt: str, user_prompt: str) -> str:
@@ -48,12 +48,13 @@ class GeminiClient:
         heuristic fallback logic.
         """
         try:
-            response = self.model.generate_content(
-                [
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[
                     {"role": "system", "parts": [system_prompt]},
                     {"role": "user", "parts": [user_prompt]},
                 ],
-                generation_config={"temperature": self.temperature},
+                config={"temperature": self.temperature},
             )
 
             # Defensive: response.text can be None or raise an error if blocked by filters.
