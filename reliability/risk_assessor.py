@@ -61,6 +61,11 @@ def assess_risk(
         # This is usually good, but still risky.
         score -= 5
         reasons.append("Bare except was modified, verify correctness.")
+    
+    # import hallucination check
+    if "import " in fixed_code and "import " not in original_code:
+        score -= 15
+        reasons.append("Fix introduces new dependencies/imports. Verify necessity.")
 
     # ----------------------------
     # Clamp score
