@@ -46,3 +46,20 @@ def test_missing_return_is_penalized():
     )
     assert risk["score"] < 100
     assert any("Return" in r or "return" in r for r in risk["reasons"])
+
+def test_invalid_syntax_is_high_risk():
+    original = "def calculate_total(a, b):\n    return a + b\n"
+    
+    # Intentionally broken Python (missing closing parenthesis)
+    fixed = "def calculate_total(a, b:\n    return a + b\n"
+    
+    risk = assess_risk(
+        original_code=original,
+        fixed_code=fixed,
+        issues=[],
+    )
+    
+    assert risk["score"] == 0
+    assert risk["level"] == "high"
+    assert risk["should_autofix"] is False
+    assert any("syntax" in r.lower() for r in risk["reasons"])

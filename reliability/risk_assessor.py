@@ -27,6 +27,19 @@ def assess_risk(
             "should_autofix": False,
         }
 
+    # syntax validity check
+    try:
+        # 'exec' mode compiles a block of statements. 
+        # This will throw a SyntaxError if the LLM messed up indentation, brackets, etc.
+        compile(fixed_code, "<string>", "exec")
+    except SyntaxError as e:
+        return {
+            "score": 0,
+            "level": "high",
+            "reasons": [f"Critical: LLM generated invalid Python syntax. ({e})"],
+            "should_autofix": False,
+        }
+
     original_lines = original_code.strip().splitlines()
     fixed_lines = fixed_code.strip().splitlines()
 
